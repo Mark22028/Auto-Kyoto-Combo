@@ -1,0 +1,104 @@
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+local isDragging = false
+local buttonPosition = UDim2.new(0.5, -60, 0.7, 0)
+local screenGui, comboButton
+
+local function pressKey(key)
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+    VirtualInputManager:SendKeyEvent(true, key, false, game)
+    wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, key, false, game)
+end
+
+local function teleportForward(distance)
+    if _G.teleportForward then
+        return _G.teleportForward(distance)
+    end
+
+    local player = game.Players.LocalPlayer
+    if not (player and player.Character and player.Character.PrimaryPart) then return end
+
+    local hrp = player.Character.PrimaryPart
+    hrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -distance)
+end
+
+local function executeKyotoCombo()
+    if isDragging then return end
+
+    local distance = _G.teleportDistance or 17  -- Default to 17, but allows override
+
+    pressKey(Enum.KeyCode.One)
+    wait(2)
+    teleportForward(distance)
+    pressKey(Enum.KeyCode.Two)
+end
+
+local function createKyotoComboButton()
+    if not screenGui then
+        screenGui = Instance.new("ScreenGui")
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = CoreGui
+    end
+
+    if comboButton then
+        comboButton:Destroy()
+    end
+
+    comboButton = Instance.new("TextButton", screenGui)
+    comboButton.Size = UDim2.new(0, 120, 0, 40)
+    comboButton.Position = buttonPosition
+    comboButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+    comboButton.Text = "Kyoto Combo"
+    comboButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    comboButton.Font = Enum.Font.SourceSansBold
+    comboButton.TextSize = 16
+    comboButton.AutoButtonColor = true
+    comboButton.BorderSizePixel = 0
+    comboButton.ClipsDescendants = true
+    comboButton.Active = true
+    comboButton.Draggable = true
+    comboButton.ZIndex = 10
+
+    local uiCorner = Instance.new("UICorner", comboButton)
+    uiCorner.CornerRadius = UDim.new(0, 10)
+
+    local dragging = false
+
+    comboButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = false
+            dragging = true
+        end
+    end)
+
+    comboButton.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            isDragging = true
+        end
+    end)
+
+    comboButton.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    comboButton.MouseButton1Click:Connect(function()
+        if not isDragging then
+            executeKyotoCombo()
+        end
+    end)
+
+    comboButton:GetPropertyChangedSignal("Position"):Connect(function()
+        buttonPosition = comboButton.Position
+    end)
+end
+
+createKyotoComboButton()
+
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    wait(1)
+    createKyotoComboButton()
+end)
