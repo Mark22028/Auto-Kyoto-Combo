@@ -13,25 +13,19 @@ local function pressKey(key)
 end
 
 local function teleportForward(distance)
-    if _G.teleportForward then
-        return _G.teleportForward(distance)
-    end
-
     local player = game.Players.LocalPlayer
     if not (player and player.Character and player.Character.PrimaryPart) then return end
 
     local hrp = player.Character.PrimaryPart
-    hrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -distance)
+    hrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -(distance or _G.teleportDistance or 17))
 end
 
 local function executeKyotoCombo()
     if isDragging then return end
 
-    local distance = _G.teleportDistance or 17  -- Default to 17, but allows override
-
     pressKey(Enum.KeyCode.One)
     wait(2)
-    teleportForward(distance)
+    teleportForward(_G.teleportDistance or 17)
     pressKey(Enum.KeyCode.Two)
 end
 
